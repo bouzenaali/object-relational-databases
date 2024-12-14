@@ -39,7 +39,6 @@ CREATE OR REPLACE TYPE etudiant_type UNDER personne_type (
 -- 5
 CREATE OR REPLACE TYPE enseignant_type UNDER personne_type (
     grade VARCHAR2(50)
-
 );
 -- 
 
@@ -57,7 +56,7 @@ DROP TABLE Personnes CASCADE CONSTRAINTS;
 -- B. Insertions
 
 -- for checking
-SELECT * FROM Personnes_age;
+SELECT * FROM Personnes;
 -- 
 
 -- 6: creatioin des tables
@@ -89,7 +88,7 @@ INSERT INTO Personnes VALUES (
 -- 
 
 -- 2
-INSERT INTO ALI.PERSONNES VALUES (
+INSERT INTO Personnes VALUES (
     enseignant_type(
         'ENS-2010',  -- numero
         'ZAID',      -- nom
@@ -126,6 +125,25 @@ INSERT INTO Personnes VALUES (
     )
 );
 -- 
+-- 10. Afficher le numéro, nom, prénom et l’adresse e-mail de toutes les personnes.
+SELECT p.numero, p.nom, p.prenom, TREAT(p.adresse AS adresseWithEmail_type).adresseEmail AS email
+FROM Personnes p
+WHERE p.adresse IS OF(adresseWithEmail_type);
+-- 
 
+-- 11. Afficher le numéro, nom, prénom et grade de tous les enseignants
+SELECT p.numero, p.nom, p.prenom, TREAT(VALUE(p) AS enseignant_type).grade AS grade
+FROM PERSONNES p;
+-- 
 
+-- 12. Afficher le numéro, nom, numéro de la carte d’étudiant et l’année d’inscription de tous les étudiants.
+SELECT p.numero, p.nom, TREAT(VALUE(p) AS etudiant_type).numCarteEtudiant AS numCarteEtudiant, TREAT(VALUE(p) AS etudiant_type).anneeInscription AS anneeInscription
+FROM PERSONNES p;
+-- 
 
+-- 13. Afficher les informations des personnes qui ne sont ni des étudiants ni des enseignants.
+SELECT * FROM Personnes p
+WHERE VALUE(p) IS OF (personne_type) 
+AND VALUE(p) IS NOT OF (etudiant_type) 
+AND VALUE(p) IS NOT OF (enseignant_type);
+-- 
