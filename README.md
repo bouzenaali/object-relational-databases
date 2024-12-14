@@ -12,3 +12,5 @@ The repository is organized into several directories, each corresponding to a di
 `TP4 - Les Collections`<br>
 `TP5 - Collections de Références`<br>
 `TP6 & 7 - Les Indexes`<br>
+
+**ENJOY!** ✨
