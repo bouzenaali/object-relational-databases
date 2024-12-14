@@ -1,0 +1,99 @@
+CREATE TYPE etablissement_T AS OBJECT (code VARCHAR2(10), nom VARCHAR2(30), type VARCHAR2(30));
+
+CREATE TYPE chercheur_T AS OBJECT (code VARCHAR2(10), nom VARCHAR2(20), prenom VARCHAR2(20), grade VARCHAR2(10), refetablch REF etablissement_T);
+CREATE TYPE chercheur_elt_nt_type AS OBJECT (ref_cher REF chercheur_T);
+CREATE TYPE chercher_TAb AS TABLE OF chercheur_elt_nt_type;
+CREATE TYPE projet_T AS OBJECT (code VARCHAR2(10), intitule VARCHAR2(100), duree VARCHAR2(100), domaine VARCHAR2(100), filiere VARCHAR2(100), refetablpr REF etablissement_T, refrespo REF chercheur_T , lesmembres chercher_TAb) ;
+
+CREATE TABLE etablissements OF etablissement_T (CONSTRAINT pk_etablissement PRIMARY KEY(code));
+
+CREATE TABLE chercheurs OF chercheur_T
+(CONSTRAINT pk_chercheur PRIMARY KEY (code),
+CONSTRAINT nn_Refetablch CHECK (Refetablch IS NOT NULL),
+CONSTRAINT ref_Refetablch refetablch REFERENCES etablissements);
+
+CREATE TABLE projets OF projet_T (
+CONSTRAINT pk_projet PRIMARY KEY(code),
+CONSTRAINT nn_refrespo CHECK (refrespo IS NOT NULL),
+CONSTRAINT nn_refetab CHECK (refetablpr IS NOT NULL),
+CONSTRAINT ref_refrespo refrespo REFERENCES chercheurs,
+CONSTRAINT ref_refetablpr refetablpr REFERENCES etablissements)
+NESTED TABLE lesmembres STORE AS lesmembresTab;
+
+
+insert into etablissements values ('etab 1', 'estin', 'informatique');
+insert into etablissements values ('etab 2', 'lisi Alger', 'informatique');
+insert into etablissements values ('etab 3', 'lisi Sidi_belabbes', 'informatique');
+
+insert into chercheurs values ('cher 1', 'ziani', 'laldja', 'doctorante', (select ref(e) from etablissements e where e.code = 'etab 1'));
+insert into chercheurs values ('cher 2', 'bouali', 'meriem', 'doctorante', (select ref(e) from etablissements e where e.code = 'etab 2'));
+insert into chercheurs values ('cher 3', 'melchene', 'celestin', 'doctorante', (select ref(e) from etablissements e where e.code = 'etab 3'));
+insert into chercheurs values ('cher 4', 'azzouger', 'dalila', 'doctorante', (select ref(e) from etablissements e where e.code = 'etab 1'));
+
+insert into projets values ('proj 1', 'projet base de données', '4 mois','informatique', 'data science', (select ref(e) from etablissements e where e.code = 'etab 1'), 
+(select ref(c) from chercheurs c where c.code = 'cher 1'), 
+chercher_TAb(chercheur_elt_nt_type((select ref(c) from chercheurs c where c.code = 'cher 1')),
+chercheur_elt_nt_type((select ref(c) from chercheurs c where c.code = 'cher 2')),
+chercheur_elt_nt_type((select ref(c) from chercheurs c where c.code = 'cher 3'))));
+
+insert into projets values ('proj 2', 'projet SDRF', '4 mois','informatique', 'IA', (select ref(e) from etablissements e where e.code = 'etab 1'), 
+(select ref(c) from chercheurs c where c.code = 'cher 2'), 
+chercher_TAb(chercheur_elt_nt_type((select ref(c) from chercheurs c where c.code = 'cher 1')),
+chercheur_elt_nt_type((select ref(c) from chercheurs c where c.code = 'cher 2')),
+chercheur_elt_nt_type((select ref(c) from chercheurs c where c.code = 'cher 3')),
+chercheur_elt_nt_type((select ref(c) from chercheurs c where c.code = 'cher 4'))));
+
+insert into projets values ('02SDRF2022', 'projet SDRF', '6 mois', 'informatique', 'IA', (select ref(e) from etablissements e where e.code = 'etab 2'), 
+(select ref(c) from chercheurs c where c.code = 'cher 2'), 
+chercher_TAb(chercheur_elt_nt_type((select ref(c) from chercheurs c where c.code = 'cher 1')),
+chercheur_elt_nt_type((select ref(c) from chercheurs c where c.code = 'cher 2')),
+chercheur_elt_nt_type((select ref(c) from chercheurs c where c.code = 'cher 4'))));
+
+1/
+
+Select m.ref_cher.code, m.ref_cher.nom,
+m.ref_cher.prenom
+from projets p, TABLE(p.lesmembres)m
+where p.code='02SDRF2022';
+
+2/
+
+solution 1:
+
+SELECT p.refetablpr.code AS etablissement_code, p.refetablpr.nom AS etablissement_nom, COUNT(*) AS nb_projets
+FROM projets p
+GROUP BY p.refetablpr.code, p.refetablpr.nom
+HAVING COUNT(*) = ( SELECT MAX(COUNT(*)) FROM  projets p GROUP BY p.refetablpr.code);
+
+solution 2:
+
+
+SELECT p.refetablpr.code AS etablissement_code,
+       p.refetablpr.nom AS etablissement_nom,
+       COUNT(*) AS nb_projets
+FROM projets p
+GROUP BY p.refetablpr.code, p.refetablpr.nom
+HAVING COUNT(*) = (
+    SELECT MAX(nb_projets)
+    FROM (
+        SELECT COUNT(*) AS nb_projets
+        FROM projets p
+        GROUP BY p.refetablpr.code
+    )
+)
+
+
+solution 3:
+
+
+SELECT p.refetablpr.code AS etablissement_code,
+       p.refetablpr.nom AS etablissement_nom,
+       COUNT(*) AS nb_projets
+FROM projets p
+GROUP BY p.refetablpr.code, p.refetablpr.nom
+HAVING COUNT(*) = (
+    SELECT MAX(COUNT(*))
+    FROM projets p GROUP BY p.refetablpr.code, p.refetablpr.nom
+    
+)
+
