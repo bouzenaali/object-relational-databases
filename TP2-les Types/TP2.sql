@@ -136,6 +136,12 @@ SELECT p.numero, p.nom, p.prenom, TREAT(VALUE(p) AS enseignant_type).grade AS gr
 FROM PERSONNES p;
 -- 
 
+-- 11. Afficher le numéro, nom, prénom et grade de tous les enseignants
+SELECT p.numero, p.nom, p.prenom, TREAT(VALUE(p) AS enseignant_type).grade AS grade
+FROM PERSONNES p
+WHERE VALUE(p) IS OF (enseignant_type);
+-- 
+
 -- 12. Afficher le numéro, nom, numéro de la carte d’étudiant et l’année d’inscription de tous les étudiants.
 SELECT p.numero, p.nom, TREAT(VALUE(p) AS etudiant_type).numCarteEtudiant AS numCarteEtudiant, TREAT(VALUE(p) AS etudiant_type).anneeInscription AS anneeInscription
 FROM PERSONNES p;

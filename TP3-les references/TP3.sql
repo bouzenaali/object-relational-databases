@@ -1,19 +1,19 @@
 -- Creating custom types
 
 -- Define the type for `ecole_type`
-CREATE TYPE ecole_type AS OBJECT (
+CREATE OR REPLACE TYPE ecole_type AS OBJECT (
     nom_ecole VARCHAR2(20)
 );
 
 -- Define the type for `specialites_type`
-CREATE TYPE specialites_type AS OBJECT (
+CREATE OR REPLACE TYPE specialites_type AS OBJECT (
     nom_specialite VARCHAR2(50),
     ref_ecole REF ecole_type
 
 );
 
 -- Define the type for `etudiant_type`
-CREATE TYPE etudiant_type AS OBJECT (
+CREATE OR REPLACE TYPE etudiant_type AS OBJECT (
     matricule NUMBER(4),
     nom VARCHAR2(20),
     prenom VARCHAR2(20),
@@ -72,7 +72,7 @@ VALUES (0111, 'Fatima', 'Khelif', (SELECT REF(s) FROM Specialite s WHERE s.nom_s
 
 -- 3. Queries using object references
 -- a. Display all school references
-SELECT REF(e) FROM Ecole e;
+SELECT REF(e) FROM Ecole e; -- this displays the OID of each record
 
 -- b. Display OIDs of all schools
 SELECT DEREF(s.ref_ecole) FROM Specialite s;
